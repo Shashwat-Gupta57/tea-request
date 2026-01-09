@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>For Apoorva 🎀</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Patrick+Hand&family=Special+Elite&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Import Map for Gemini -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+      }
+    }
+    </script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Fredoka', 'sans-serif'],
+              hand: ['Patrick Hand', 'cursive'],
+              typewriter: ['Special Elite', 'monospace'],
+            },
+            colors: {
+              'cute-pink': '#ffe4e6',
+              'cute-dark-pink': '#fda4af',
+              'cute-purple': '#e9d5ff',
+              'cute-text': '#881337',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      body {
+        background-color: #fff1f2;
+        /* Polka dot pattern */
+        background-image: radial-gradient(#fda4af 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+        overflow-x: hidden;
+      }
+      
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #fff1f2; }
+      ::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #fb7185; }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 1s cubic-bezier(0.17, 0.55, 0.55, 1);
+      }
+      .reveal.active { opacity: 1; transform: translateY(0); }
+
+      .height-bar { height: 0; transition: height 1.5s ease-out; }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      .animate-float { animation: float 3s ease-in-out infinite; }
+
+      .gift-card { transition: all 0.3s ease; }
+      .gift-card:hover { transform: scale(1.05) rotate(5deg); }
+      
+      /* --- INVESTIGATOR BOARD STYLES --- */
+      .investigator-board {
+        background-color: #fdf2f8;
+        background-image: 
+          linear-gradient(#fbcfe8 1px, transparent 1px), 
+          linear-gradient(90deg, #fbcfe8 1px, transparent 1px);
+        background-size: 40px 40px;
+        box-shadow: inset 0 0 50px rgba(190, 24, 93, 0.1);
+      }
+
+      /* 3D Flip Animation */
+      .photo-container {
+        perspective: 1000px;
+        cursor: pointer;
+      }
+      .photo-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+      }
+      /* The flip action is applied via JS class */
+      .photo-container.flipped .photo-inner {
+        transform: rotateY(180deg) scale(1.1);
+      }
+      
+      .photo-front, .photo-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      .photo-back {
+        background-color: #fff;
+        transform: rotateY(180deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+      }
+
+      /* Lightbox specific */
+      .lightbox-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+      .lightbox-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .lightbox-content {
+        transform: scale(0.5) rotate(-10deg);
+        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .lightbox-overlay.active .lightbox-content {
+        transform: scale(1) rotate(0deg);
+      }
+
+      /* Game Styles */
+      .game-canvas {
+        cursor: crosshair;
+        background-color: #ecfccb;
+        position: relative;
+        overflow: hidden;
+      }
+      .tea-drop {
+        position: absolute;
+        font-size: 2rem;
+        user-select: none;
+        animation: drop 3s linear forwards;
+        cursor: pointer;
+      }
+      @keyframes drop {
+        from { top: -50px; opacity: 1; transform: rotate(0deg); }
+        to { top: 100%; opacity: 0; transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body class="font-sans text-rose-900 selection:bg-rose-200 selection:text-rose-900">
+    
+    <!-- Progress Bar -->
+    <div id="progress-bar" class="fixed top-0 left-0 h-2 bg-rose-500 z-50 transition-all duration-100 ease-out" style="width: 0%"></div>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightbox" class="lightbox-overlay">
+       <div class="relative w-full max-w-md p-4">
+          <button id="close-lightbox" class="absolute -top-12 right-0 text-rose-500 hover:text-rose-700">
+             <i data-lucide="x-circle" class="w-10 h-10"></i>
+          </button>
+          <div id="lightbox-card" class="lightbox-content photo-container h-96 w-full">
+             <div class="photo-inner bg-white p-3 shadow-2xl rounded-sm">
+                <!-- Content injected via JS -->
+                <div class="photo-front relative">
+                   <img id="lb-img" src="" class="w-full h-full object-cover rounded-sm border border-gray-100" />
+                   <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-rose-300/80 transform -rotate-2"></div>
+                   <div class="absolute bottom-2 left-0 right-0 text-center font-hand text-gray-400">Click to flip! ↻</div>
+                </div>
+                <div class="photo-back bg-yellow-50">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-rose-300/80 transform rotate-2"></div>
+                    <h3 class="font-typewriter text-xl text-rose-800 font-bold mb-2">Evidence #<span id="lb-id"></span></h3>
+                    <p class="font-hand text-xl text-center text-gray-600">"Proof that we are iconic and you should tell me everything."</p>
+                    <div class="mt-4 text-4xl">🕵️‍♀️ ✨</div>
+                </div>
+             </div>
+          </div>
+       </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-12 space-y-32 max-w-4xl">
+
+      <!-- WELCOME SECTION -->
+      <section class="reveal min-h-[80vh] flex flex-col items-center justify-center text-center relative">
+        <div class="absolute top-0 animate-bounce">
+          <i data-lucide="heart" class="w-12 h-12 text-rose-400 fill-rose-200"></i>
+        </div>
+        
+        <div class="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[2rem] shadow-xl border-4 border-white transform rotate-1 hover:rotate-0 transition-transform duration-500">
+          <h1 class="text-5xl md:text-7xl font-bold text-rose-600 mb-6 font-hand">
+            Dearest Apoorva,
+          </h1>
+          <div class="text-lg md:text-xl text-rose-900 leading-relaxed space-y-4 font-sans max-w-2xl">
+            <p>Welcome to your personal digital corner! 🎀</p>
+            <p>I made this because honestly? You are my bestie. I love talking to you, I love our convos, and I love how you reply instantly (usually).</p>
+            <p>BUT... I feel like there's a whole world of "Apoorva Lore" that I'm missing out on! <br/><span class="font-bold text-rose-600 italic">I feel like you hold back!</span> 🥺</p>
+            <p class="text-sm text-rose-500 mt-4">(Please scroll down. I have prepared a case file.)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HEIGHT CHECK SECTION -->
+      <section class="reveal flex flex-col items-center justify-center">
+        <h2 class="text-4xl font-hand font-bold text-rose-700 mb-12">The Stat Check</h2>
+        
+        <div class="flex items-end justify-center gap-12 md:gap-24 h-96 w-full max-w-2xl bg-white/40 rounded-3xl p-8 shadow-inner relative" id="height-container">
+          <!-- Apoorva -->
+          <div class="flex flex-col items-center w-1/3 h-full justify-end">
+            <div class="text-center mb-2 animate-float">
+              <span class="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-sm font-bold border border-rose-200">Apoorva (5'5)</span>
+            </div>
+            <div class="height-bar w-full bg-rose-300 rounded-t-2xl relative border-x-4 border-t-4 border-white shadow-lg flex flex-col items-center justify-end pb-4" data-target-height="70%">
+              <div class="text-white font-bold text-4xl">🥺</div>
+              <p class="text-white text-xs mt-2 font-bold opacity-80">Smol & Secretive</p>
+            </div>
+          </div>
+  
+          <!-- User -->
+          <div class="flex flex-col items-center w-1/3 h-full justify-end">
+             <div class="text-center mb-2">
+              <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold border border-indigo-200">Me (5'8)</span>
+            </div>
+            <div class="height-bar w-full bg-indigo-300 rounded-t-2xl relative border-x-4 border-t-4 border-white shadow-lg flex flex-col items-center justify-end pb-4" data-target-height="90%">
+              <div class="text-white font-bold text-4xl">😎</div>
+              <p class="text-white text-xs mt-2 font-bold opacity-80">Tall & Trustworthy</p>
+            </div>
+          </div>
+  
+          <div class="absolute top-4 right-4 bg-white/80 p-4 rounded-xl shadow-sm max-w-[200px] text-xs text-rose-800 rotate-2">
+              <p><strong>Fun Fact:</strong> Being 5'8 means I have a higher vantage point to spot when you are hiding things from me! 👀</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- GATEKEEPING SECTION -->
+      <section class="reveal flex flex-col items-center justify-center text-center">
+        <h2 class="text-4xl font-hand font-bold text-rose-800 mb-6">DLC Characters Locked 🔒</h2>
+        <p class="text-rose-900 text-lg mb-8 max-w-2xl">
+            Apoorva, I love you, but why is the "Meet Friends" feature currently disabled in our friendship settings? 
+            <br />
+            <span class="text-sm opacity-70">(Even your sister was a rare spawn event that only happened because of a joke!)</span>
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+            <!-- Card 1 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-dashed border-gray-300 opacity-75 flex flex-col items-center">
+                <div class="bg-gray-100 p-4 rounded-full mb-4">
+                    <i data-lucide="users" class="w-8 h-8 text-gray-400"></i>
+                </div>
+                <h3 class="font-bold text-gray-500 mb-2">New Friends</h3>
+                <div class="bg-gray-200 text-gray-500 text-xs font-bold px-2 py-1 rounded">LOCKED</div>
+                <p class="text-xs text-gray-400 mt-2">Requires Level 10 Trust</p>
+            </div>
+
+            <!-- Card 2: ME -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-4 border-rose-400 transform scale-110 z-10 flex flex-col items-center">
+                 <div class="bg-rose-100 p-4 rounded-full mb-4">
+                    <i data-lucide="user-plus" class="w-8 h-8 text-rose-600"></i>
+                </div>
+                <h3 class="font-bold text-rose-600 mb-2">Me (Bestie)</h3>
+                <div class="bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded">UNLOCKED</div>
+                <p class="text-xs text-rose-400 mt-2">Ready to mingle!</p>
+            </div>
+
+            <!-- Card 3 -->
+             <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-dashed border-gray-300 opacity-75 flex flex-col items-center">
+                <div class="bg-gray-100 p-4 rounded-full mb-4">
+                    <i data-lucide="lock" class="w-8 h-8 text-gray-400"></i>
+                </div>
+                <h3 class="font-bold text-gray-500 mb-2">The Sister</h3>
+                <div class="bg-yellow-200 text-yellow-700 text-xs font-bold px-2 py-1 rounded">PARTIALLY UNLOCKED</div>
+                <p class="text-xs text-gray-400 mt-2">Voice Chat DLC Acquired</p>
+            </div>
+        </div>
+      </section>
+
+      <!-- GALLERY SECTION: DETECTIVE BOARD -->
+      <section class="reveal w-full">
+         <div class="text-center mb-12">
+            <div class="inline-block bg-rose-100 p-4 rounded-full mb-4">
+               <i data-lucide="search" class="w-8 h-8 text-rose-500"></i>
+            </div>
+            <h2 class="text-4xl font-typewriter font-bold text-rose-800 mb-4 tracking-tighter">CASE FILE: THE ARCHIVES</h2>
+            <p class="text-rose-600 max-w-2xl mx-auto text-lg font-hand">
+              I have compiled all the evidence of our friendship. <br/>
+              <span class="text-sm italic opacity-80">(Click a photo to examine the evidence closely!)</span>
+            </p>
+         </div>
+
+         <div class="investigator-board p-8 rounded-xl shadow-inner border-2 border-rose-200 min-h-[600px] relative">
+            <div id="gallery-grid" class="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+               <!-- JS Populated -->
+            </div>
+            
+            <!-- Decorative Sticky Note -->
+            <div class="absolute -top-4 -right-4 bg-yellow-200 p-4 shadow-lg transform rotate-3 font-hand text-rose-900 w-40 text-center z-10 hidden md:block">
+               <div class="w-24 h-4 bg-yellow-300/50 absolute -top-2 left-8"></div>
+               MUST PROTECT AT ALL COSTS!!
+            </div>
+         </div>
+      </section>
+
+      <!-- GAMES SECTION -->
+      <section class="reveal w-full">
+         <div class="text-center mb-10">
+            <h2 class="text-4xl font-hand font-bold text-rose-800 mb-2">Friendship Quests 🎮</h2>
+            <p class="text-rose-600">Complete these challenges to prove you are ready to spill the tea.</p>
+         </div>
+
+         <div class="grid md:grid-cols-2 gap-8">
+            <!-- GAME 1: TEA CATCHER -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-4 border-green-200">
+               <h3 class="font-bold text-xl text-green-700 mb-2 flex items-center gap-2">
+                  <i data-lucide="coffee" class="w-5 h-5"></i> Tea Catcher
+               </h3>
+               <p class="text-sm text-gray-500 mb-4">Click the tea cups before they fall! Proves you have tea to give.</p>
+               
+               <div id="game-tea-canvas" class="game-canvas h-64 rounded-xl border-2 border-green-400 flex items-center justify-center relative">
+                  <button id="start-tea-game" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold shadow-lg z-10">Start Game</button>
+                  <div id="tea-score" class="absolute top-2 right-2 font-mono text-green-800 font-bold text-xl hidden">Score: 0</div>
+                  <div id="tea-msg" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-center p-4 hidden rounded-xl z-20"></div>
+               </div>
+            </div>
+
+            <!-- GAME 2: THE VAULT -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-4 border-slate-200">
+               <h3 class="font-bold text-xl text-slate-700 mb-2 flex items-center gap-2">
+                  <i data-lucide="keypad" class="w-5 h-5"></i> The Trust Vault
+               </h3>
+               <p class="text-sm text-gray-500 mb-4">Enter the code. Hint: My height (in feet/inches, no symbols).</p>
+               
+               <div class="bg-slate-100 p-4 rounded-xl flex flex-col items-center">
+                  <div id="vault-display" class="bg-slate-800 text-green-400 font-mono text-2xl px-4 py-2 rounded mb-4 w-full text-center tracking-widest">_ _</div>
+                  
+                  <div class="grid grid-cols-3 gap-2 w-full max-w-[200px]">
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(1)">1</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(2)">2</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(3)">3</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(4)">4</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(5)">5</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(6)">6</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(7)">7</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(8)">8</button>
+                     <button class="keypad-btn bg-white p-3 rounded shadow hover:bg-slate-50 font-bold text-slate-700" onclick="enterDigit(9)">9</button>
+                     <button class="keypad-btn bg-rose-100 p-3 rounded shadow hover:bg-rose-200 font-bold text-rose-700 col-span-3" onclick="clearVault()">CLEAR</button>
+                  </div>
+                  <p id="vault-msg" class="text-xs mt-3 h-4 text-rose-500 font-bold text-center"></p>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      <!-- TEA TIME SECTION -->
+      <section class="reveal w-full">
+        <div class="grid md:grid-cols-2 gap-8 w-full">
+          <!-- Left: The Plea -->
+          <div class="bg-white rounded-3xl p-8 shadow-xl border-2 border-rose-100">
+            <div class="flex items-center gap-3 mb-4">
+              <i data-lucide="coffee" class="text-rose-500"></i>
+              <h2 class="text-2xl font-bold text-rose-700 font-hand">It's Tea Time ☕️</h2>
+            </div>
+            <p class="text-rose-900 mb-4">You initiate convos, you reply fast, and I appreciate that so much! But then...</p>
+            <ul class="list-disc list-inside text-rose-800 space-y-2 mb-6 bg-rose-50 p-4 rounded-xl">
+              <li>You only update me on things I already know.</li>
+              <li>No *fresh* drama? Impossible. You are too cool for that.</li>
+              <li>I feel like an outsider sometimes! 😭</li>
+            </ul>
+            
+            <button id="btn-prompt" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span id="btn-prompt-text">Generate a Topic for Us</span>
+            </button>
+
+            <div id="prompt-result" class="hidden mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-center font-hand text-lg"></div>
+          </div>
+
+          <!-- Right: The Vault -->
+          <div class="bg-slate-800 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-32 bg-slate-700 rounded-full mix-blend-overlay filter blur-3xl opacity-20 transform translate-x-10 -translate-y-10"></div>
+            
+            <div class="flex items-center gap-3 mb-4">
+              <i data-lucide="lock" class="text-emerald-400"></i>
+              <h2 class="text-2xl font-bold font-hand text-emerald-100">The Vault</h2>
+            </div>
+
+            <p class="text-slate-300 mb-6">
+              I promise, cross my heart (and my 5'8 height), that anything you tell me stays in the vault. I am not here to leak. I am here to support.
+            </p>
+
+            <div class="bg-slate-700/50 p-6 rounded-xl text-center border border-slate-600 mb-6 min-h-[120px] flex items-center justify-center">
+               <p id="trust-text" class="text-slate-400 text-sm">Click below to generate an official certificate of trust.</p>
+            </div>
+
+            <button id="btn-trust" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+              Verify My Trustworthiness
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIRTUAL GIFTS -->
+      <section class="reveal text-center w-full">
+        <h2 class="text-3xl font-hand font-bold text-rose-800 mb-2">Peace Offerings</h2>
+        <p class="text-rose-600 mb-10 text-center">Open these to see how much I appreciate you!</p>
+        
+        <div id="gifts-container" class="flex flex-wrap justify-center gap-6">
+          <!-- JS will populate -->
+        </div>
+      </section>
+
+      <!-- ENDING -->
+      <section class="reveal mb-20 w-full flex justify-center">
+         <div class="max-w-2xl w-full bg-white p-10 rounded-xl shadow-2xl border-t-8 border-rose-400 relative">
+            <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white p-3 rounded-full shadow-lg">
+              <i data-lucide="mail" class="w-6 h-6"></i>
+            </div>
+
+            <h2 class="text-3xl font-hand font-bold text-center text-rose-800 mb-6 mt-4">One Last Thing...</h2>
+            
+            <div class="space-y-4 text-rose-900 font-sans leading-relaxed text-lg">
+              <p>Jokes aside, Apoorva, I made this because I value our friendship so much. The height difference, the gatekeeping jokes, it's all because I want to be closer to you.</p>
+              <p>I don't want to be an outsider. I want to be one of your own. Someone you trust with the silly stuff, the heavy stuff, and the random tea about people I'll probably never meet.</p>
+              <p>You don't have to feel burdened to entertain me, but just know that my ears (and heart) are always open. I'm not going anywhere.</p>
+              <p class="font-bold text-center mt-8">Love,<br/>Your 5'8 Bestie 💖</p>
+            </div>
+         </div>
+      </section>
+
+      <footer class="text-center pb-8 text-rose-400 text-sm font-hand">
+        Made with ❤️ for Apoorva Maurya
+      </footer>
+
+    </main>
+
+    <!-- MAIN SCRIPT -->
+    <script type="module">
+      import { GoogleGenAI } from "@google/genai";
+
+      // ==========================================
+      // GLOBAL CONFIG
+      // ==========================================
+      window.GEMINI_API_KEY = ""; // <--- PASTE YOUR API KEY HERE
+
+      // ==========================================
+      // 1. INITIALIZATION & ICONS
+      // ==========================================
+      lucide.createIcons();
+
+      // ==========================================
+      // 2. SCROLL PROGRESS
+      // ==========================================
+      window.addEventListener('scroll', () => {
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (scrollTop / scrollHeight) * 100;
+        document.getElementById('progress-bar').style.width = scrolled + '%';
+      });
+
+      // ==========================================
+      // 3. ANIMATION OBSERVER
+      // ==========================================
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            
+            // Special handling for height bars
+            if (entry.target.querySelector('.height-bar')) {
+               const bars = entry.target.querySelectorAll('.height-bar');
+               bars.forEach(bar => {
+                 bar.style.height = bar.getAttribute('data-target-height');
+               });
+            }
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+      // ==========================================
+      // 4. GALLERY LOGIC (UPDATED FOR LIGHTBOX)
+      // ==========================================
+      const galleryContainer = document.getElementById('gallery-grid');
+      const lightbox = document.getElementById('lightbox');
+      const lightboxCard = document.getElementById('lightbox-card');
+      const lbImg = document.getElementById('lb-img');
+      const lbId = document.getElementById('lb-id');
+      const closeBtn = document.getElementById('close-lightbox');
+
+      const photos = [];
+      for (let i = 1; i <= 10; i++) photos.push(`res/photo-${i}.png`);
+      photos.push('res/photo-11.jpg');
+      for (let i = 12; i <= 29; i++) photos.push(`res/photo-${i}.jpeg`);
+
+      photos.forEach((src, index) => {
+        const div = document.createElement('div');
+        div.className = "break-inside-avoid bg-white p-3 pb-8 shadow-md rounded-sm transform hover:scale-105 transition-all duration-300 relative group mb-4 cursor-pointer";
+        const rotation = Math.random() * 4 - 2;
+        div.style.transform = `rotate(${rotation}deg)`;
+        
+        div.innerHTML = `
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-rose-300/60 opacity-90 z-10" style="transform: translateX(-50%) rotate(${rotation * -1}deg)"></div>
+          <img src="${src}" alt="Memory" class="w-full h-auto rounded-sm filter sepia-[0.2] group-hover:sepia-0 transition-all duration-500 pointer-events-none" onerror="this.style.display='none'">
+          <div class="text-center font-typewriter text-xs text-gray-500 mt-2">Evid. #${index + 1}</div>
+        `;
+        
+        // Click to open lightbox
+        div.addEventListener('click', () => {
+           lbImg.src = src;
+           lbId.innerText = index + 1;
+           lightbox.classList.add('active');
+           // Reset flip
+           lightboxCard.classList.remove('flipped');
+        });
+        
+        galleryContainer.appendChild(div);
+      });
+
+      // Lightbox interactions
+      closeBtn.addEventListener('click', () => {
+         lightbox.classList.remove('active');
+      });
+      lightboxCard.addEventListener('click', () => {
+         lightboxCard.classList.toggle('flipped');
+      });
+      lightbox.addEventListener('click', (e) => {
+         if(e.target === lightbox) lightbox.classList.remove('active');
+      });
+
+      // ==========================================
+      // 5. GAME LOGIC
+      // ==========================================
+      
+      // --- TEA CATCHER ---
+      const teaCanvas = document.getElementById('game-tea-canvas');
+      const startTeaBtn = document.getElementById('start-tea-game');
+      const teaScoreEl = document.getElementById('tea-score');
+      const teaMsg = document.getElementById('tea-msg');
+      let teaScore = 0;
+      let gameInterval;
+
+      startTeaBtn.addEventListener('click', () => {
+         startTeaBtn.classList.add('hidden');
+         teaScoreEl.classList.remove('hidden');
+         teaScoreEl.innerText = "Score: 0";
+         teaScore = 0;
+         teaMsg.classList.add('hidden');
+         
+         // Spawn drops
+         gameInterval = setInterval(() => {
+            const drop = document.createElement('div');
+            drop.innerText = Math.random() > 0.5 ? '☕️' : '🍵';
+            drop.className = 'tea-drop';
+            drop.style.left = Math.random() * 80 + 10 + '%';
+            
+            drop.addEventListener('click', () => {
+               teaScore++;
+               teaScoreEl.innerText = `Score: ${teaScore}`;
+               drop.remove();
+               
+               if(teaScore >= 10) {
+                  endTeaGame(true);
+               }
+            });
+            
+            // Cleanup if missed
+            drop.addEventListener('animationend', () => {
+               if(drop.parentNode) drop.remove();
+            });
+
+            teaCanvas.appendChild(drop);
+         }, 800);
+      });
+
+      function endTeaGame(win) {
+         clearInterval(gameInterval);
+         // Clear remaining
+         document.querySelectorAll('.tea-drop').forEach(el => el.remove());
+         
+         teaMsg.classList.remove('hidden');
+         if(win) {
+            teaMsg.innerHTML = "<div><div class='text-4xl mb-2'>🎉</div>You caught the tea!<br>Now spill some real tea!</div>";
+         }
+         
+         setTimeout(() => {
+            teaMsg.classList.add('hidden');
+            startTeaBtn.innerText = "Play Again";
+            startTeaBtn.classList.remove('hidden');
+         }, 3000);
+      }
+
+      // --- VAULT ---
+      let vaultCode = "";
+      const correctCode = "58"; // 5'8
+      const vaultDisplay = document.getElementById('vault-display');
+      const vaultMsg = document.getElementById('vault-msg');
+
+      window.enterDigit = (digit) => {
+         if(vaultCode.length < 2) {
+            vaultCode += digit;
+            updateVaultDisplay();
+         }
+         if(vaultCode.length === 2) {
+            checkVault();
+         }
+      };
+      
+      window.clearVault = () => {
+         vaultCode = "";
+         updateVaultDisplay();
+         vaultMsg.innerText = "";
+      };
+
+      function updateVaultDisplay() {
+         vaultDisplay.innerText = vaultCode.padEnd(2, '_').split('').join(' ');
+      }
+
+      function checkVault() {
+         if(vaultCode === correctCode) {
+            vaultDisplay.classList.remove('text-green-400');
+            vaultDisplay.classList.add('text-green-200');
+            vaultMsg.innerText = "ACCESS GRANTED: You know me well! 🔓";
+            vaultMsg.classList.replace('text-rose-500', 'text-green-600');
+            confettiEffect(document.getElementById('vault-display'));
+         } else {
+            vaultMsg.innerText = "ACCESS DENIED: Hint - I am taller than you.";
+            setTimeout(window.clearVault, 1500);
+         }
+      }
+      
+      function confettiEffect(element) {
+         // Simple visual shake for now
+         element.style.transform = "scale(1.1)";
+         setTimeout(() => element.style.transform = "scale(1)", 200);
+      }
+
+      // ==========================================
+      // 6. GIFTS LOGIC
+      // ==========================================
+      const gifts = [
+        { id: '1', emoji: '💐', name: 'Flowers', message: 'Because you deserve them even if you gatekeep me.' },
+        { id: '2', emoji: '🍫', name: 'Chocolate', message: 'Sweet treats for my sweet (but secretive) friend.' },
+        { id: '3', emoji: '👑', name: 'Crown', message: 'For the Queen of keeping things to herself.' },
+      ];
+      
+      const giftsContainer = document.getElementById('gifts-container');
+      
+      gifts.forEach(gift => {
+        const giftEl = document.createElement('div');
+        giftEl.className = "relative w-48 h-48 cursor-pointer gift-card";
+        giftEl.innerHTML = `
+          <div class="gift-front absolute inset-0 bg-gradient-to-br from-rose-400 to-rose-600 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white z-10 transition-opacity duration-500">
+            <i data-lucide="gift" class="w-12 h-12 mb-2"></i>
+            <span class="font-bold">Click Me!</span>
+          </div>
+          <div class="gift-back absolute inset-0 bg-white rounded-2xl shadow-xl border-4 border-rose-200 flex flex-col items-center justify-center p-4 text-center z-0 opacity-0 transform scale-50 transition-all duration-500">
+            <div class="text-5xl mb-2">${gift.emoji}</div>
+            <h3 class="font-bold text-rose-700 text-sm mb-1">${gift.name}</h3>
+            <p class="text-xs text-rose-500 leading-tight">${gift.message}</p>
+          </div>
+        `;
+
+        giftEl.addEventListener('click', () => {
+           const front = giftEl.querySelector('.gift-front');
+           const back = giftEl.querySelector('.gift-back');
+           
+           front.style.opacity = '0';
+           front.style.pointerEvents = 'none';
+           back.style.opacity = '1';
+           back.style.transform = 'scale(1)';
+        });
+        
+        giftsContainer.appendChild(giftEl);
+      });
+      // Re-run icons for dynamically added elements
+      lucide.createIcons();
+
+      // ==========================================
+      // 7. GEMINI API LOGIC
+      // ==========================================
+      const btnPrompt = document.getElementById('btn-prompt');
+      const btnTrust = document.getElementById('btn-trust');
+
+      // Helper to check key
+      const getAI = () => {
+         if(!window.GEMINI_API_KEY) {
+            alert("Oops! The developer (me) forgot to paste the API Key in index.html line ~240!");
+            return null;
+         }
+         return new GoogleGenAI({ apiKey: window.GEMINI_API_KEY });
+      };
+
+      // Ice Breaker
+      btnPrompt.addEventListener('click', async () => {
+         const ai = getAI();
+         if(!ai) return;
+
+         const btnText = document.getElementById('btn-prompt-text');
+         const resultBox = document.getElementById('prompt-result');
+         
+         btnPrompt.disabled = true;
+         btnText.innerText = "Asking the AI...";
+         
+         try {
+            const response = await ai.models.generateContent({
+              model: 'gemini-3-flash-preview',
+              contents: "Give me a funny, specific, and slightly dramatic 'gossip prompt' to ask a best friend who is holding back on sharing 'tea'. It should be lighthearted and cute. Keep it under 20 words.",
+            });
+            resultBox.innerText = `"${response.text.trim()}"`;
+            resultBox.classList.remove('hidden');
+         } catch(e) {
+            console.error(e);
+            resultBox.innerText = "\"What's the tea on that one person we both know?\"";
+            resultBox.classList.remove('hidden');
+         } finally {
+            btnPrompt.disabled = false;
+            btnText.innerText = "Generate Another";
+         }
+      });
+
+      // Trust Badge
+      btnTrust.addEventListener('click', async () => {
+         const ai = getAI();
+         if(!ai) return;
+         
+         const textBox = document.getElementById('trust-text');
+         btnTrust.disabled = true;
+         btnTrust.innerText = "Forging Certificate...";
+
+         try {
+            const response = await ai.models.generateContent({
+              model: 'gemini-3-flash-preview',
+              contents: "Write a short, funny 2-sentence certificate of trust for a best friend promising not to leak secrets. Use a royal or official tone but make it cute.",
+            });
+            textBox.innerHTML = `<span class="font-serif italic text-emerald-200">"${response.text.trim()}"</span>`;
+            textBox.classList.remove('text-slate-400');
+         } catch(e) {
+            console.error(e);
+            textBox.innerHTML = `<span class="font-serif italic text-emerald-200">"I solemnly swear that I am up to no good, but your secrets are safe with me!"</span>`;
+         } finally {
+            btnTrust.innerText = "Verify Again";
+            btnTrust.disabled = false;
+         }
+      });
+
+    </script>
+  </body>
+</html>
